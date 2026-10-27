@@ -1,0 +1,1131 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SafeNow - Plataforma de Prevención de Riesgos</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        safety: {
+                            yellow: '#F59E0B',
+                            dark: '#0F172A',
+                            orange: '#EA580C',
+                            green: '#10B981',
+                            carddark: '#1E293B',
+                            slate: '#334155'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans min-h-screen flex flex-col antialiased selection:bg-amber-500 selection:text-slate-950">
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col space-y-3 pointer-events-none"></div>
+
+    <!-- Main App Wrapper -->
+    <div id="app" class="flex h-screen overflow-hidden">
+
+        <!-- SIDEBAR NAVIGATION -->
+        <aside id="sidebar" class="w-64 bg-slate-900 border-r border-slate-800 flex flex-col transition-all duration-300 z-30">
+            <!-- Logo Header -->
+            <div class="h-20 flex items-center px-6 border-b border-slate-800 space-x-3 bg-slate-900/50 backdrop-blur">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-600 flex items-center justify-center shadow-lg shadow-amber-500/20 text-slate-950 font-black text-xl">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </div>
+                <div>
+                    <h1 class="font-extrabold text-lg tracking-wider bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent">SafeNow</h1>
+                    <span class="text-xs text-slate-400 font-medium">Prevención Inteligente</span>
+                </div>
+            </div>
+
+            <!-- Navigation Links -->
+            <nav class="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto">
+                <p class="px-3 text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Menú Principal</p>
+                <a href="#dashboard" onclick="switchTab('dashboard')" class="nav-link flex items-center space-x-3 px-3 py-3 rounded-xl font-medium text-sm transition-all bg-amber-500/10 text-amber-400 border border-amber-500/20 shadow-sm" data-tab="dashboard">
+                    <i class="fa-solid fa-chart-pie w-5 text-center"></i>
+                    <span>Panel General</span>
+                </a>
+                <a href="#report" onclick="switchTab('report')" class="nav-link flex items-center space-x-3 px-3 py-3 rounded-xl font-medium text-sm text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 transition-all" data-tab="report">
+                    <i class="fa-solid fa-camera-retro w-5 text-center text-orange-400"></i>
+                    <span>Reportar Riesgo</span>
+                    <span class="ml-auto bg-orange-500/20 text-orange-400 text-[10px] font-bold px-2 py-0.5 rounded-full">Nuevo</span>
+                </a>
+                <a href="#tickets" onclick="switchTab('tickets')" class="nav-link flex items-center space-x-3 px-3 py-3 rounded-xl font-medium text-sm text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 transition-all" data-tab="tickets">
+                    <i class="fa-solid fa-ticket w-5 text-center text-sky-400"></i>
+                    <span>Gestión de Tickets</span>
+                    <span id="ticket-badge" class="ml-auto bg-sky-500/20 text-sky-400 text-xs px-2 py-0.5 rounded-full font-bold">0</span>
+                </a>
+                <a href="#hierarchy" onclick="switchTab('hierarchy')" class="nav-link flex items-center space-x-3 px-3 py-3 rounded-xl font-medium text-sm text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 transition-all" data-tab="hierarchy">
+                    <i class="fa-solid fa-layer-group w-5 text-center text-emerald-400"></i>
+                    <span>Jerarquía de Control</span>
+                </a>
+
+                <p class="px-3 text-xs font-semibold text-slate-400 uppercase tracking-wider mt-6 mb-2">Sistema y Usuario</p>
+                <a href="#profile" onclick="switchTab('profile')" class="nav-link flex items-center space-x-3 px-3 py-3 rounded-xl font-medium text-sm text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 transition-all" data-tab="profile">
+                    <i class="fa-solid fa-user-gear w-5 text-center"></i>
+                    <span>Mi Perfil & Cuenta</span>
+                </a>
+                <a href="#auth" onclick="openAuthModal()" class="flex items-center space-x-3 px-3 py-3 rounded-xl font-medium text-sm text-rose-400 hover:bg-rose-500/10 transition-all">
+                    <i class="fa-solid fa-right-left w-5 text-center"></i>
+                    <span>Cambiar de Usuario</span>
+                </a>
+            </nav>
+
+            <!-- User Mini Profile at bottom of sidebar -->
+            <div class="p-4 border-t border-slate-800 bg-slate-900/80">
+                <div class="flex items-center space-x-3">
+                    <div id="sidebar-user-avatar" class="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center font-bold text-amber-400 border border-slate-600">
+                        CM
+                    </div>
+                    <div class="overflow-hidden flex-1">
+                        <p id="sidebar-user-name" class="text-sm font-semibold truncate text-slate-200">Carlos Mendoza</p>
+                        <p id="sidebar-user-role" class="text-xs text-amber-400 truncate">Prevencionista</p>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT AREA -->
+        <div class="flex-1 flex flex-col overflow-hidden bg-slate-950">
+            
+            <!-- TOP BAR -->
+            <header class="h-20 bg-slate-900/60 backdrop-blur border-b border-slate-800 px-8 flex items-center justify-between z-20">
+                <div class="flex items-center space-x-4">
+                    <button onclick="toggleSidebar()" class="text-slate-400 hover:text-white md:hidden">
+                        <i class="fa-solid fa-bars text-xl"></i>
+                    </button>
+                    <div>
+                        <h2 id="page-title" class="text-xl font-bold text-slate-100 flex items-center gap-2">
+                            <i class="fa-solid fa-chart-pie text-amber-500"></i> Panel General
+                        </h2>
+                        <p id="page-subtitle" class="text-xs text-slate-400">Monitoreo en tiempo real de incidentes y riesgos laborales</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center space-x-4">
+                    <!-- Quick action report button -->
+                    <button onclick="switchTab('report')" class="hidden sm:flex items-center space-x-2 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-slate-950 font-bold px-4 py-2.5 rounded-xl shadow-lg shadow-amber-500/20 text-sm transition-all transform hover:-translate-y-0.5">
+                        <i class="fa-solid fa-camera"></i>
+                        <span>Reportar Hallazgo</span>
+                    </button>
+
+                    <!-- Notification Bell -->
+                    <div class="relative">
+                        <button onclick="toggleNotifications()" class="w-10 h-10 rounded-xl bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-slate-300 border border-slate-700 transition">
+                            <i class="fa-solid fa-bell"></i>
+                            <span id="notif-dot" class="absolute top-2 right-2 w-2.5 h-2.5 rounded-full bg-orange-500 animate-pulse"></span>
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <!-- SCROLLABLE VIEW CONTAINER -->
+            <main id="main-viewport" class="flex-1 overflow-y-auto p-6 md:p-8">
+                
+                <!-- TAB 1: DASHBOARD -->
+                <div id="tab-dashboard" class="tab-content space-y-6">
+                    <!-- Metrics Cards -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-sm relative overflow-hidden">
+                            <div class="absolute right-4 top-4 text-slate-800 text-4xl"><i class="fa-solid fa-ticket"></i></div>
+                            <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Tickets</p>
+                            <h3 id="stat-total" class="text-3xl font-black text-slate-100 mt-2">0</h3>
+                            <div class="flex items-center text-xs text-amber-400 mt-2 font-medium">
+                                <i class="fa-solid fa-arrow-trend-up mr-1"></i> <span>Activos en planta</span>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-sm relative overflow-hidden">
+                            <div class="absolute right-4 top-4 text-amber-500/10 text-4xl"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                            <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Abiertos / Reportados</p>
+                            <h3 id="stat-open" class="text-3xl font-black text-amber-400 mt-2">0</h3>
+                            <div class="flex items-center text-xs text-slate-400 mt-2 font-medium">
+                                <span>Requieren evaluación</span>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-sm relative overflow-hidden">
+                            <div class="absolute right-4 top-4 text-sky-500/10 text-4xl"><i class="fa-solid fa-gears"></i></div>
+                            <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">En Mitigación</p>
+                            <h3 id="stat-progress" class="text-3xl font-black text-sky-400 mt-2">0</h3>
+                            <div class="flex items-center text-xs text-sky-400 mt-2 font-medium">
+                                <i class="fa-solid fa-spinner fa-spin mr-1"></i> <span>Jerarquía aplicada</span>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-sm relative overflow-hidden">
+                            <div class="absolute right-4 top-4 text-emerald-500/10 text-4xl"><i class="fa-solid fa-circle-check"></i></div>
+                            <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Cerrados con Éxito</p>
+                            <h3 id="stat-closed" class="text-3xl font-black text-emerald-400 mt-2">0</h3>
+                            <div class="flex items-center text-xs text-emerald-400 mt-2 font-medium">
+                                <i class="fa-solid fa-shield-check mr-1"></i> <span>Verificados y archivados</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick banner & Risk Matrix Summary -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <!-- Welcome / Banner -->
+                        <div class="lg:col-span-2 bg-gradient-to-r from-slate-900 via-slate-900 to-slate-800 border border-slate-800 rounded-3xl p-8 relative overflow-hidden flex flex-col justify-between">
+                            <div class="absolute right-0 bottom-0 translate-x-8 translate-y-8 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
+                            <div class="relative z-10">
+                                <span class="bg-amber-500/15 text-amber-400 border border-amber-500/30 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">Cultura Preventiva</span>
+                                <h2 class="text-2xl md:text-3xl font-extrabold text-white mt-4">La seguridad es tarea de todos en <span class="text-amber-400">SafeNow</span></h2>
+                                <p class="text-slate-400 mt-2 max-w-xl text-sm leading-relaxed">
+                                    Identifica condiciones subestándar, fotografía el peligro y aplica de forma rigurosa la <strong class="text-slate-200">Jerarquía de Control</strong> (Eliminación, Sustitución, Ingeniería, Administrativos y EPP) para garantizar cero accidentes.
+                                </p>
+                            </div>
+                            <div class="mt-8 flex flex-wrap gap-4 relative z-10">
+                                <button onclick="switchTab('report')" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-6 py-3 rounded-xl transition shadow-lg shadow-amber-500/20 text-sm flex items-center space-x-2">
+                                    <i class="fa-solid fa-camera"></i>
+                                    <span>Sacar Foto a Riesgo</span>
+                                </button>
+                                <button onclick="switchTab('hierarchy')" class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold px-6 py-3 rounded-xl transition border border-slate-700 text-sm flex items-center space-x-2">
+                                    <i class="fa-solid fa-book-open"></i>
+                                    <span>Ver Jerarquía de Control</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Recent Activity Stream -->
+                        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 flex flex-col">
+                            <h3 class="text-base font-bold text-slate-100 flex items-center justify-between mb-4">
+                                <span>Actividad Reciente</span>
+                                <span class="text-xs text-slate-400 font-normal">En vivo</span>
+                            </h3>
+                            <div id="recent-activity-list" class="space-y-4 flex-1 overflow-y-auto pr-1">
+                                <!-- Populated dynamically -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Tickets Table Preview -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6">
+                        <div class="flex items-center justify-between mb-6">
+                            <div>
+                                <h3 class="text-lg font-bold text-slate-100">Tickets Recientes en Planta</h3>
+                                <p class="text-xs text-slate-400">Listado de hallazgos registrados y su estado actual</p>
+                            </div>
+                            <button onclick="switchTab('tickets')" class="text-xs font-bold text-amber-400 hover:underline flex items-center gap-1">
+                                Ver todos <i class="fa-solid fa-arrow-right"></i>
+                            </button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm text-slate-300">
+                                <thead class="bg-slate-800/60 text-xs uppercase tracking-wider text-slate-400 border-b border-slate-800">
+                                    <tr>
+                                        <th class="py-3 px-4 rounded-l-xl">Ticket #</th>
+                                        <th class="py-3 px-4">Hallazgo / Riesgo</th>
+                                        <th class="py-3 px-4">Área / Zona</th>
+                                        <th class="py-3 px-4">Severidad</th>
+                                        <th class="py-3 px-4">Estado</th>
+                                        <th class="py-3 px-4 rounded-r-xl text-right">Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="dashboard-tickets-table" class="divide-y divide-slate-800/50">
+                                    <!-- Populated dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 2: REPORT RISK (Steps 3 & 4) -->
+                <div id="tab-report" class="tab-content hidden max-w-4xl mx-auto space-y-6">
+                    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-xl">
+                        <div class="flex items-center space-x-4 mb-6 pb-6 border-b border-slate-800">
+                            <div class="w-12 h-12 rounded-2xl bg-orange-500/20 text-orange-400 flex items-center justify-center text-xl font-bold">
+                                <i class="fa-solid fa-camera-retro"></i>
+                            </div>
+                            <div>
+                                <h2 class="text-xl font-bold text-white">Reportar Nuevo Riesgo o Hallazgo</h2>
+                                <p class="text-xs text-slate-400">Captura la evidencia fotográfica, detalla la situación y genera tu ticket de seguimiento</p>
+                            </div>
+                        </div>
+
+                        <form id="report-form" onsubmit="handleReportSubmit(event)" class="space-y-6">
+                            <!-- Photo Capture Section -->
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-300 mb-2">
+                                    <i class="fa-solid fa-image text-amber-500 mr-2"></i> Evidencia Fotográfica del Riesgo <span class="text-rose-500">*</span>
+                                </label>
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div class="md:col-span-2 border-2 border-dashed border-slate-700 hover:border-amber-500/50 rounded-2xl p-6 text-center flex flex-col items-center justify-center bg-slate-950/50 transition cursor-pointer relative group" onclick="triggerFileInput()">
+                                        <input type="file" id="hazard-file-input" accept="image/*" class="hidden" onchange="handleImagePreview(event)">
+                                        <div id="upload-placeholder" class="space-y-2">
+                                            <div class="w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center mx-auto text-slate-400 group-hover:text-amber-400 transition">
+                                                <i class="fa-solid fa-cloud-arrow-up text-2xl"></i>
+                                            </div>
+                                            <p class="text-sm font-semibold text-slate-200">Sube una foto o haz clic para capturar</p>
+                                            <p class="text-xs text-slate-500">PNG, JPG, WEBP hasta 10MB</p>
+                                        </div>
+                                        <div id="image-preview-container" class="hidden w-full h-full absolute inset-0 bg-slate-950 rounded-2xl overflow-hidden flex items-center justify-center p-2">
+                                            <img id="image-preview-tag" src="" alt="Vista previa" class="max-h-48 rounded-xl object-cover">
+                                            <button type="button" onclick="event.stopPropagation(); removeImage();" class="absolute top-3 right-3 bg-rose-600 hover:bg-rose-500 text-white p-2 rounded-xl text-xs shadow">
+                                                <i class="fa-solid fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Quick Preset Samples for Testing -->
+                                    <div class="flex flex-col justify-between bg-slate-950/50 border border-slate-800 rounded-2xl p-4">
+                                        <div>
+                                            <p class="text-xs font-semibold text-amber-400 uppercase tracking-wider mb-2">Simular Fotografía:</p>
+                                            <p class="text-xs text-slate-400 mb-3">¿No tienes foto? Selecciona un ejemplo estándar de riesgo industrial:</p>
+                                        </div>
+                                        <div class="grid grid-cols-2 gap-2">
+                                            <button type="button" onclick="setPresetImage('electrical')" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 p-2 rounded-xl text-left border border-slate-700 truncate">
+                                                ⚡ Tablero Eléctrico
+                                            </button>
+                                            <button type="button" onclick="setPresetImage('spill')" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 p-2 rounded-xl text-left border border-slate-700 truncate">
+                                                💧 Derrame Aceite
+                                            </button>
+                                            <button type="button" onclick="setPresetImage('machinery')" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 p-2 rounded-xl text-left border border-slate-700 truncate">
+                                                ⚙️ Maquinaria Sin Guarda
+                                            </button>
+                                            <button type="button" onclick="setPresetImage('height')" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 p-2 rounded-xl text-left border border-slate-700 truncate">
+                                                🏗️ Trabajo en Altura
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Hazard Details Form Grid -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-sm font-semibold text-slate-300 mb-2">Título del Hallazgo <span class="text-rose-500">*</span></label>
+                                    <input type="text" id="hazard-title" required placeholder="Ej. Tablero eléctrico sin tapa de protección" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-100 focus:outline-none focus:border-amber-500 text-sm">
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-semibold text-slate-300 mb-2">Área / Zona Crítica <span class="text-rose-500">*</span></label>
+                                    <select id="hazard-area" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-100 focus:outline-none focus:border-amber-500 text-sm">
+                                        <option value="">Selecciona el área responsable...</option>
+                                        <option value="Planta de Procesos - Sector A">Planta de Procesos - Sector A</option>
+                                        <option value="Sala de Servidores y TI">Sala de Servidores y TI</option>
+                                        <option value="Línea de Envasado y Empaque">Línea de Envasado y Empaque</option>
+                                        <option value="Bodega de Materias Primas">Bodega de Materias Primas</option>
+                                        <option value="Mantenimiento Mecánico">Mantenimiento Mecánico</option>
+                                        <option value="Área Logística y Despachos">Área Logística y Despachos</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-semibold text-slate-300 mb-2">Categoría del Riesgo <span class="text-rose-500">*</span></label>
+                                    <select id="hazard-category" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-100 focus:outline-none focus:border-amber-500 text-sm">
+                                        <option value="">Selecciona categoría...</option>
+                                        <option value="Riesgo eléctrico">Riesgo Eléctrico</option>
+                                        <option value="Condición ergonómica">Condición Ergonómica</option>
+                                        <option value="Elemento punzocortante / Mecánico">Mecánico / Maquinaria</option>
+                                        <option value="Superficie de tránsito (Caída)">Superficie de Tránsito (Caída)</option>
+                                        <option value="Infraestructura / Servidor Crítico">Infraestructura / Servidores</option>
+                                        <option value="Sustancias Peligrosas / Químicas">Sustancias Peligrosas / Químicas</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-semibold text-slate-300 mb-2">Nivel de Severidad Estimado <span class="text-rose-500">*</span></label>
+                                    <select id="hazard-severity" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-100 focus:outline-none focus:border-amber-500 text-sm">
+                                        <option value="Bajo">🟢 Bajo (Inconveniente menor / Sin lesión)</option>
+                                        <option value="Medio" selected>🟡 Medio (Potencial lesión leve / Paro parcial)</option>
+                                        <option value="Alto">🟠 Alto (Riesgo grave / Lesión incapacitante)</option>
+                                        <option value="Crítico">🔴 Crítico (Riesgo mortal / Paro total crítico)</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-300 mb-2">Descripción Detallada del Hallazgo <span class="text-rose-500">*</span></label>
+                                <textarea id="hazard-description" rows="4" required placeholder="Describe detalladamente por qué esta situación pone en peligro a personas, procesos o equipos críticos..." class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-100 focus:outline-none focus:border-amber-500 text-sm resize-none"></textarea>
+                            </div>
+
+                            <div class="flex items-center justify-end space-x-4 pt-4 border-t border-slate-800">
+                                <button type="button" onclick="switchTab('dashboard')" class="px-6 py-3 rounded-xl border border-slate-700 text-slate-300 hover:bg-slate-800 text-sm font-semibold transition">
+                                    Cancelar
+                                </button>
+                                <button type="submit" class="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-slate-950 font-bold px-8 py-3 rounded-xl shadow-lg shadow-amber-500/20 text-sm transition">
+                                    <i class="fa-solid fa-paper-plane mr-2"></i> Enviar Hallazgo y Generar Ticket
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- TAB 3: TICKETS MANAGEMENT (Steps 4, 5, 6, 7 & 8) -->
+                <div id="tab-tickets" class="tab-content hidden space-y-6">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div>
+                            <h2 class="text-xl font-bold text-slate-100">Gestión de Tickets y Hallazgos</h2>
+                            <p class="text-xs text-slate-400">Recepción, aplicación de Jerarquía de Control, mitigación y cierre de tickets</p>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-3">
+                            <div class="relative">
+                                <input type="text" id="ticket-search" oninput="renderTicketsTable()" placeholder="Buscar por ticket, título..." class="bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 pl-10 text-xs text-slate-200 focus:outline-none focus:border-amber-500 w-64">
+                                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-500 text-xs"></i>
+                            </div>
+                            <select id="ticket-filter-status" onchange="renderTicketsTable()" class="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500">
+                                <option value="ALL">Todos los Estados</option>
+                                <option value="Abierto">Abiertos</option>
+                                <option value="En Mitigación">En Mitigación</option>
+                                <option value="Cerrado">Cerrados</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Tickets Cards / Table Grid -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm text-slate-300">
+                                <thead class="bg-slate-800/60 text-xs uppercase tracking-wider text-slate-400 border-b border-slate-800">
+                                    <tr>
+                                        <th class="py-3 px-4 rounded-l-xl">Ticket #</th>
+                                        <th class="py-3 px-4">Hallazgo</th>
+                                        <th class="py-3 px-4">Área Responsable</th>
+                                        <th class="py-3 px-4">Severidad / Control</th>
+                                        <th class="py-3 px-4">Estado</th>
+                                        <th class="py-3 px-4 rounded-r-xl text-right">Gestión</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="full-tickets-tbody" class="divide-y divide-slate-800/50">
+                                    <!-- Populated dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 4: HIERARCHY OF CONTROL GUIDE (Step 6) -->
+                <div id="tab-hierarchy" class="tab-content hidden max-w-5xl mx-auto space-y-6">
+                    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-xl">
+                        <div class="flex items-center space-x-4 mb-6 pb-6 border-b border-slate-800">
+                            <div class="w-12 h-12 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xl font-bold">
+                                <i class="fa-solid fa-layer-group"></i>
+                            </div>
+                            <div>
+                                <h2 class="text-xl font-bold text-white">Jerarquía de Control de Riesgos</h2>
+                                <p class="text-xs text-slate-400">Metodología internacional para la mitigación y eliminación efectiva de peligros</p>
+                            </div>
+                        </div>
+
+                        <div class="space-y-4">
+                            <!-- 1. Eliminación -->
+                            <div class="bg-slate-950 border border-emerald-500/30 rounded-2xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 relative overflow-hidden">
+                                <div class="absolute left-0 top-0 bottom-0 w-2 bg-emerald-500"></div>
+                                <div class="space-y-1 pl-2">
+                                    <div class="flex items-center space-x-3">
+                                        <span class="bg-emerald-500/20 text-emerald-400 text-xs font-bold px-3 py-1 rounded-full">Nivel 1 - Más Efectivo</span>
+                                        <h3 class="text-lg font-bold text-white">1. Eliminación</h3>
+                                    </div>
+                                    <p class="text-sm text-slate-400">Remover físicamente el peligro por completo del lugar de trabajo. Es la medida más segura y definitiva.</p>
+                                </div>
+                                <div class="bg-slate-900 px-4 py-2 rounded-xl text-xs text-slate-300 border border-slate-800">
+                                    Ej: Retirar maquinaria obsoleta con riesgo de colapso.
+                                </div>
+                            </div>
+
+                            <!-- 2. Sustitución -->
+                            <div class="bg-slate-950 border border-teal-500/30 rounded-2xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 relative overflow-hidden">
+                                <div class="absolute left-0 top-0 bottom-0 w-2 bg-teal-500"></div>
+                                <div class="space-y-1 pl-2">
+                                    <div class="flex items-center space-x-3">
+                                        <span class="bg-teal-500/20 text-teal-400 text-xs font-bold px-3 py-1 rounded-full">Nivel 2</span>
+                                        <h3 class="text-lg font-bold text-white">2. Sustitución</h3>
+                                    </div>
+                                    <p class="text-sm text-slate-400">Reemplazar el material, proceso o sustancia peligrosa por otra que represente un riesgo menor o nulo.</p>
+                                </div>
+                                <div class="bg-slate-900 px-4 py-2 rounded-xl text-xs text-slate-300 border border-slate-800">
+                                    Ej: Cambiar solvente tóxico por limpiador biodegradable a base de agua.
+                                </div>
+                            </div>
+
+                            <!-- 3. Controles de Ingeniería -->
+                            <div class="bg-slate-950 border border-sky-500/30 rounded-2xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 relative overflow-hidden">
+                                <div class="absolute left-0 top-0 bottom-0 w-2 bg-sky-500"></div>
+                                <div class="space-y-1 pl-2">
+                                    <div class="flex items-center space-x-3">
+                                        <span class="bg-sky-500/20 text-sky-400 text-xs font-bold px-3 py-1 rounded-full">Nivel 3</span>
+                                        <h3 class="text-lg font-bold text-white">3. Controles de Ingeniería</h3>
+                                    </div>
+                                    <p class="text-sm text-slate-400">Modificar equipos, instalar resguardos físicos, sistemas de ventilación o enclavamientos automáticos.</p>
+                                </div>
+                                <div class="bg-slate-900 px-4 py-2 rounded-xl text-xs text-slate-300 border border-slate-800">
+                                    Ej: Instalar guardas perimetrales y sensores de parada de emergencia en fajas.
+                                </div>
+                            </div>
+
+                            <!-- 4. Controles Administrativos -->
+                            <div class="bg-slate-950 border border-amber-500/30 rounded-2xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 relative overflow-hidden">
+                                <div class="absolute left-0 top-0 bottom-0 w-2 bg-amber-500"></div>
+                                <div class="space-y-1 pl-2">
+                                    <div class="flex items-center space-x-3">
+                                        <span class="bg-amber-500/20 text-amber-400 text-xs font-bold px-3 py-1 rounded-full">Nivel 4</span>
+                                        <h3 class="text-lg font-bold text-white">4. Controles Administrativos</h3>
+                                    </div>
+                                    <p class="text-sm text-slate-400">Señalización de seguridad, capacitación al personal, rotación de turnos y permisos de trabajo seguro (PTS).</p>
+                                </div>
+                                <div class="bg-slate-900 px-4 py-2 rounded-xl text-xs text-slate-300 border border-slate-800">
+                                    Ej: Colocar letreros de "Peligro Alta Tensión" y capacitar operarios.
+                                </div>
+                            </div>
+
+                            <!-- 5. EPP / EEPP -->
+                            <div class="bg-slate-950 border border-orange-500/30 rounded-2xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 relative overflow-hidden">
+                                <div class="absolute left-0 top-0 bottom-0 w-2 bg-orange-500"></div>
+                                <div class="space-y-1 pl-2">
+                                    <div class="flex items-center space-x-3">
+                                        <span class="bg-orange-500/20 text-orange-400 text-xs font-bold px-3 py-1 rounded-full">Nivel 5 - Última Línea de Defensa</span>
+                                        <h3 class="text-lg font-bold text-white">5. Equipos de Protección Personal (EPP / EEPP)</h3>
+                                    </div>
+                                    <p class="text-sm text-slate-400">Dotación de cascos, lentes, guantes dieléctricos, calzado de seguridad y protectores auditivos.</p>
+                                </div>
+                                <div class="bg-slate-900 px-4 py-2 rounded-xl text-xs text-slate-300 border border-slate-800">
+                                    Ej: Uso obligatorio de guantes dieléctricos y careta facial.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 5: PROFILE & ACCOUNT (Steps 1 & 2) -->
+                <div id="tab-profile" class="tab-content hidden max-w-3xl mx-auto space-y-6">
+                    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-xl">
+                        <div class="flex items-center space-x-4 mb-6 pb-6 border-b border-slate-800">
+                            <div id="profile-large-avatar" class="w-16 h-16 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-2xl font-black border border-amber-500/30">
+                                CM
+                            </div>
+                            <div>
+                                <h2 id="profile-name-title" class="text-xl font-bold text-white">Carlos Mendoza</h2>
+                                <p id="profile-email-subtitle" class="text-xs text-slate-400">carlos.mendoza@safenow.cl</p>
+                            </div>
+                        </div>
+
+                        <form onsubmit="handleProfileUpdate(event)" class="space-y-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-sm font-semibold text-slate-300 mb-2">Nombre Completo</label>
+                                    <input type="text" id="prof-name" value="Carlos Mendoza" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-100 text-sm focus:outline-none focus:border-amber-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-semibold text-slate-300 mb-2">Correo Electrónico</label>
+                                    <input type="email" id="prof-email" value="carlos.mendoza@safenow.cl" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-100 text-sm focus:outline-none focus:border-amber-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-semibold text-slate-300 mb-2">Rol en SafeNow</label>
+                                    <select id="prof-role" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-100 text-sm focus:outline-none focus:border-amber-500">
+                                        <option value="Prevencionista de Riesgos">Prevencionista de Riesgos</option>
+                                        <option value="Operario / Reportador">Operario / Reportador</option>
+                                        <option value="Responsable de Área / Mantenimiento">Responsable de Área / Mantenimiento</option>
+                                        <option value="Gerente de Planta / SSO">Gerente de Planta / SSO</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-semibold text-slate-300 mb-2">Área Operativa</label>
+                                    <input type="text" id="prof-area" value="Operaciones & Mantenimiento" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-100 text-sm focus:outline-none focus:border-amber-500">
+                                </div>
+                            </div>
+
+                            <div class="flex justify-end pt-4 border-t border-slate-800">
+                                <button type="submit" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-6 py-3 rounded-xl text-sm transition shadow-lg shadow-amber-500/20">
+                                    <i class="fa-solid fa-floppy-disk mr-2"></i> Guardar Cambios de Perfil
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- TICKET DETAIL / MANAGEMENT MODAL -->
+    <div id="ticket-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-2xl w-full p-6 md:p-8 shadow-2xl relative my-8">
+            <button onclick="closeTicketModal()" class="absolute top-6 right-6 text-slate-400 hover:text-white bg-slate-800 w-8 h-8 rounded-full flex items-center justify-center transition">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div id="modal-content-container">
+                <!-- Populated dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- USER AUTH / SWITCH MODAL -->
+    <div id="auth-modal" class="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md hidden items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-8 shadow-2xl relative">
+            <div class="text-center mb-6">
+                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-600 flex items-center justify-center mx-auto text-slate-950 font-black text-2xl shadow-lg mb-3">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </div>
+                <h3 class="text-xl font-bold text-white">Seleccionar Perfil de Usuario</h3>
+                <p class="text-xs text-slate-400 mt-1">Cambia de rol para probar la recepción y gestión de tickets en SafeNow</p>
+            </div>
+
+            <div class="space-y-3">
+                <button onclick="selectPresetUser('Carlos Mendoza', 'Prevencionista de Riesgos', 'CM')" class="w-full bg-slate-950 hover:bg-slate-800 border border-slate-800 p-4 rounded-2xl flex items-center space-x-4 text-left transition group">
+                    <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 font-bold flex items-center justify-center">CM</div>
+                    <div>
+                        <p class="text-sm font-bold text-slate-200 group-hover:text-amber-400 transition">Carlos Mendoza</p>
+                        <p class="text-xs text-slate-400">Prevencionista de Riesgos (Supervisor SSO)</p>
+                    </div>
+                </button>
+
+                <button onclick="selectPresetUser('Ana Silva', 'Responsable de Mantenimiento', 'AS')" class="w-full bg-slate-950 hover:bg-slate-800 border border-slate-800 p-4 rounded-2xl flex items-center space-x-4 text-left transition group">
+                    <div class="w-10 h-10 rounded-xl bg-sky-500/20 text-sky-400 font-bold flex items-center justify-center">AS</div>
+                    <div>
+                        <p class="text-sm font-bold text-slate-200 group-hover:text-sky-400 transition">Ana Silva</p>
+                        <p class="text-xs text-slate-400">Responsable de Mantenimiento & Área Técnica</p>
+                    </div>
+                </button>
+
+                <button onclick="selectPresetUser('Pedro Ramírez', 'Operario de Planta / Reportador', 'PR')" class="w-full bg-slate-950 hover:bg-slate-800 border border-slate-800 p-4 rounded-2xl flex items-center space-x-4 text-left transition group">
+                    <div class="w-10 h-10 rounded-xl bg-orange-500/20 text-orange-400 font-bold flex items-center justify-center">PR</div>
+                    <div>
+                        <p class="text-sm font-bold text-slate-200 group-hover:text-orange-400 transition">Pedro Ramírez</p>
+                        <p class="text-xs text-slate-400">Operario de Turno / Sector Procesos</p>
+                    </div>
+                </button>
+            </div>
+
+            <div class="mt-6 pt-4 border-t border-slate-800 text-center">
+                <button onclick="closeAuthModal()" class="text-xs text-slate-400 hover:text-white">Continuar con perfil actual</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT APPLICATION LOGIC -->
+    <script>
+        // State Management
+        let currentUser = {
+            name: "Carlos Mendoza",
+            role: "Prevencionista de Riesgos",
+            email: "carlos.mendoza@safenow.cl",
+            area: "Operaciones & Mantenimiento",
+            initials: "CM"
+        };
+
+        // Mock Tickets Database
+        let tickets = [
+            {
+                id: "SFN-2026-1042",
+                title: "Tablero Eléctrico Sector A sin chapa de seguridad",
+                area: "Planta de Procesos - Sector A",
+                category: "Riesgo eléctrico",
+                severity: "Alto",
+                description: "El panel principal de control tiene la puerta abierta con cables energizados expuestos al paso del personal operativo.",
+                image: "https://placehold.co/600x400/1e293b/f59e0b?text=Tablero+Electrico+Expuesto",
+                status: "En Mitigación",
+                reportedBy: "Pedro Ramírez",
+                reportedDate: "2026-10-26 09:30",
+                hierarchyControl: "Controles de Ingeniería",
+                controlDetail: "Instalación de chapa de seguridad reforzada y señalética de alta tensión.",
+                closureNote: "",
+                closedDate: ""
+            },
+            {
+                id: "SFN-2026-1039",
+                title: "Derrame de aceite hidráulico en zona de prensas",
+                area: "Línea de Envasado y Empaque",
+                category: "Superficie de tránsito (Caída)",
+                severity: "Medio",
+                description: "Fuga menor en manguera de prensa hidráulica generando charco resbaladizo en pasillo principal.",
+                image: "https://placehold.co/600x400/1e293b/06b6d4?text=Derrame+Aceite+Hidraulico",
+                status: "Abierto",
+                reportedBy: "Carlos Mendoza",
+                reportedDate: "2026-10-27 11:15",
+                hierarchyControl: "",
+                controlDetail: "",
+                closureNote: "",
+                closedDate: ""
+            },
+            {
+                id: "SFN-2026-1021",
+                title: "Falta de rejilla de ventilación en servidor central",
+                area: "Sala de Servidores y TI",
+                category: "Infraestructura / Servidor Crítico",
+                severity: "Crítico",
+                description: "Sobrecalentamiento potencial por acumulación de polvo y obstrucción temporal en ductos de enfriamiento.",
+                image: "https://placehold.co/600x400/1e293b/10b981?text=Servidor+Critico",
+                status: "Cerrado",
+                reportedBy: "Ana Silva",
+                reportedDate: "2026-10-24 14:00",
+                hierarchyControl: "Sustitución",
+                controlDetail: "Reemplazo de filtros HEPA y limpieza integral del sistema de climatización redundante.",
+                closureNote: "Verificado por equipo TI y SSO. Temperatura normalizada a 19°C.",
+                closedDate: "2026-10-25 16:45"
+            }
+        ];
+
+        let currentUploadedImage = "https://placehold.co/600x400/1e293b/f59e0b?text=Evidencia+Riesgo+Industrial";
+
+        // Initialize App on Load
+        window.addEventListener('DOMContentLoaded', () => {
+            updateUI();
+            switchTab('dashboard');
+        });
+
+        // Toast Notification System
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            const bgCol = type === 'success' ? 'bg-emerald-600 text-white' : type === 'error' ? 'bg-rose-600 text-white' : 'bg-amber-500 text-slate-950 font-bold';
+            const icon = type === 'success' ? 'fa-circle-check' : type === 'error' ? 'fa-circle-exclamation' : 'fa-bell';
+            
+            toast.className = `${bgCol} px-5 py-3 rounded-2xl shadow-xl flex items-center space-x-3 text-sm font-medium pointer-events-auto transform translate-y-2 opacity-0 transition-all duration-300`;
+            toast.innerHTML = `<i class="fa-solid ${icon} text-lg"></i><span>${message}</span>`;
+            
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            }, 10);
+
+            setTimeout(() => {
+                toast.classList.add('translate-y-2', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        // Tab Switcher
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.nav-link').forEach(el => {
+                el.classList.remove('bg-amber-500/10', 'text-amber-400', 'border', 'border-amber-500/20');
+                el.classList.add('text-slate-400');
+            });
+
+            const activeTab = document.getElementById(`tab-${tabId}`);
+            if (activeTab) activeTab.classList.remove('hidden');
+
+            const activeLink = document.querySelector(`[data-tab="${tabId}"]`);
+            if (activeLink) {
+                activeLink.classList.remove('text-slate-400');
+                activeLink.classList.add('bg-amber-500/10', 'text-amber-400', 'border', 'border-amber-500/20');
+            }
+
+            // Update top bar title
+            const titles = {
+                dashboard: { title: 'Panel General', subtitle: 'Monitoreo en tiempo real de incidentes y riesgos laborales' },
+                report: { title: 'Reportar Riesgo', subtitle: 'Captura la evidencia fotográfica y detalla el hallazgo' },
+                tickets: { title: 'Gestión de Tickets', subtitle: 'Seguimiento, jerarquía de control y cierre de hallazgos' },
+                hierarchy: { title: 'Jerarquía de Control', subtitle: 'Guía metodológica para la mitigación segura' },
+                profile: { title: 'Mi Perfil & Cuenta', subtitle: 'Configuración y datos del usuario actual' }
+            };
+
+            if (titles[tabId]) {
+                document.getElementById('page-title').innerHTML = `<i class="fa-solid ${getTabIcon(tabId)} text-amber-500"></i> ${titles[tabId].title}`;
+                document.getElementById('page-subtitle').textContent = titles[tabId].subtitle;
+            }
+
+            // Refresh data views
+            if (tabId === 'dashboard') renderDashboard();
+            if (tabId === 'tickets') renderTicketsTable();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function getTabIcon(tab) {
+            switch(tab) {
+                case 'dashboard': return 'fa-chart-pie';
+                case 'report': return 'fa-camera-retro';
+                case 'tickets': return 'fa-ticket';
+                case 'hierarchy': return 'fa-layer-group';
+                case 'profile': return 'fa-user-gear';
+                default: return 'fa-shield';
+            }
+        }
+
+        // Update UI user details across elements
+        function updateUI() {
+            document.getElementById('sidebar-user-name').textContent = currentUser.name;
+            document.getElementById('sidebar-user-role').textContent = currentUser.role;
+            document.getElementById('sidebar-user-avatar').textContent = currentUser.initials;
+            document.getElementById('profile-large-avatar').textContent = currentUser.initials;
+            document.getElementById('profile-name-title').textContent = currentUser.name;
+            document.getElementById('profile-email-subtitle').textContent = currentUser.email;
+            document.getElementById('ticket-badge').textContent = tickets.filter(t => t.status !== 'Cerrado').length;
+        }
+
+        // Render Dashboard Metrics & Recent Lists
+        function renderDashboard() {
+            const total = tickets.length;
+            const open = tickets.filter(t => t.status === 'Abierto').length;
+            const progress = tickets.filter(t => t.status === 'En Mitigación').length;
+            const closed = tickets.filter(t => t.status === 'Cerrado').length;
+
+            document.getElementById('stat-total').textContent = total;
+            document.getElementById('stat-open').textContent = open;
+            document.getElementById('stat-progress').textContent = progress;
+            document.getElementById('stat-closed').textContent = closed;
+
+            // Recent activity feed
+            const activityContainer = document.getElementById('recent-activity-list');
+            activityContainer.innerHTML = tickets.slice(0, 4).map(t => `
+                <div class="flex items-start space-x-3 p-3 rounded-2xl bg-slate-950/40 border border-slate-800/60">
+                    <div class="w-8 h-8 rounded-xl bg-slate-800 flex items-center justify-center text-amber-400 text-xs shrink-0 mt-0.5">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-xs font-bold text-slate-200 truncate">${t.title}</p>
+                        <p class="text-[11px] text-slate-400 truncate">${t.area}</p>
+                        <span class="inline-block mt-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${getStatusBadgeClass(t.status)}">${t.status}</span>
+                    </div>
+                </div>
+            `).join('');
+
+            // Dashboard table preview
+            const dashTable = document.getElementById('dashboard-tickets-table');
+            dashTable.innerHTML = tickets.slice(0, 5).map(t => `
+                <tr class="hover:bg-slate-800/30 transition">
+                    <td class="py-3 px-4 font-mono text-xs text-amber-400 font-semibold">${t.id}</td>
+                    <td class="py-3 px-4 font-medium text-slate-200 max-w-xs truncate">${t.title}</td>
+                    <td class="py-3 px-4 text-xs text-slate-400">${t.area}</td>
+                    <td class="py-3 px-4"><span class="px-2 py-0.5 rounded-full text-xs font-bold ${getSeverityClass(t.severity)}">${t.severity}</span></td>
+                    <td class="py-3 px-4"><span class="px-2.5 py-1 rounded-full text-xs font-semibold ${getStatusBadgeClass(t.status)}">${t.status}</span></td>
+                    <td class="py-3 px-4 text-right">
+                        <button onclick="openTicketModalDetail('${t.id}')" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-xl text-xs font-semibold transition">
+                            Gestionar
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Render Full Tickets Table
+        function renderTicketsTable() {
+            const searchTerm = document.getElementById('ticket-search').value.toLowerCase();
+            const statusFilter = document.getElementById('ticket-filter-status').value;
+
+            const filtered = tickets.filter(t => {
+                const matchSearch = t.title.toLowerCase().includes(searchTerm) || t.id.toLowerCase().includes(searchTerm) || t.area.toLowerCase().includes(searchTerm);
+                const matchStatus = statusFilter === 'ALL' || t.status === statusFilter;
+                return matchSearch && matchStatus;
+            });
+
+            const tbody = document.getElementById('full-tickets-tbody');
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-slate-500 text-sm">No se encontraron tickets con los filtros seleccionados.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = filtered.map(t => `
+                <tr class="hover:bg-slate-800/30 transition">
+                    <td class="py-4 px-4 font-mono text-xs text-amber-400 font-semibold">${t.id}</td>
+                    <td class="py-4 px-4 font-medium text-slate-200">
+                        <div class="max-w-xs truncate">${t.title}</div>
+                        <div class="text-[11px] text-slate-500">Reportado por: ${t.reportedBy}</div>
+                    </td>
+                    <td class="py-4 px-4 text-xs text-slate-300">${t.area}</td>
+                    <td class="py-4 px-4">
+                        <div class="flex flex-col space-y-1">
+                            <span class="w-max px-2 py-0.5 rounded-full text-[10px] font-bold ${getSeverityClass(t.severity)}">${t.severity}</span>
+                            ${t.hierarchyControl ? `<span class="text-[11px] text-emerald-400 font-medium"><i class="fa-solid fa-shield mr-1"></i>${t.hierarchyControl}</span>` : '<span class="text-[11px] text-slate-500">Sin control</span>'}
+                        </div>
+                    </td>
+                    <td class="py-4 px-4">
+                        <span class="px-2.5 py-1 rounded-full text-xs font-semibold ${getStatusBadgeClass(t.status)}">${t.status}</span>
+                    </td>
+                    <td class="py-4 px-4 text-right">
+                        <button onclick="openTicketModalDetail('${t.id}')" class="bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20 px-3.5 py-2 rounded-xl text-xs font-semibold transition">
+                            <i class="fa-solid fa-eye mr-1"></i> Detalle / Gestión
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function getSeverityClass(sev) {
+            switch(sev) {
+                case 'Crítico': return 'bg-rose-500/20 text-rose-400 border border-rose-500/30';
+                case 'Alto': return 'bg-orange-500/20 text-orange-400 border border-orange-500/30';
+                case 'Medio': return 'bg-amber-500/20 text-amber-400 border border-amber-500/30';
+                default: return 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30';
+            }
+        }
+
+        function getStatusBadgeClass(status) {
+            switch(status) {
+                case 'Abierto': return 'bg-amber-500/20 text-amber-400 border border-amber-500/30';
+                case 'En Mitigación': return 'bg-sky-500/20 text-sky-400 border border-sky-500/30';
+                case 'Cerrado': return 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30';
+                default: return 'bg-slate-800 text-slate-300';
+            }
+        }
+
+        // Photo Upload & Preset Simulation
+        function triggerFileInput() {
+            document.getElementById('hazard-file-input').click();
+        }
+
+        function handleImagePreview(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    currentUploadedImage = e.target.result;
+                    showImagePreviewUI(currentUploadedImage);
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function setPresetImage(type) {
+            const presets = {
+                electrical: 'https://placehold.co/600x400/1e293b/f59e0b?text=Tablero+Electrico+Expuesto',
+                spill: 'https://placehold.co/600x400/1e293b/06b6d4?text=Derrame+Aceite+Hidraulico',
+                machinery: 'https://placehold.co/600x400/1e293b/ea580c?text=Maquinaria+Sin+Guarda',
+                height: 'https://placehold.co/600x400/1e293b/10b981?text=Trabajo+Altura+SinArnes'
+            };
+            currentUploadedImage = presets[type];
+            showImagePreviewUI(currentUploadedImage);
+            showToast('Imagen de simulación cargada correctamente.', 'info');
+        }
+
+        function showImagePreviewUI(src) {
+            document.getElementById('upload-placeholder').classList.add('hidden');
+            const previewContainer = document.getElementById('image-preview-container');
+            const previewTag = document.getElementById('image-preview-tag');
+            previewTag.src = src;
+            previewContainer.classList.remove('hidden');
+        }
+
+        function removeImage() {
+            currentUploadedImage = 'https://placehold.co/600x400/1e293b/f59e0b?text=Evidencia+Riesgo+Industrial';
+            document.getElementById('image-preview-container').classList.add('hidden');
+            document.getElementById('upload-placeholder').classList.remove('hidden');
+            document.getElementById('hazard-file-input').value = '';
+        }
+
+        // Handle Report Submission (Steps 3 & 4)
+        function handleReportSubmit(e) {
+            e.preventDefault();
+            const title = document.getElementById('hazard-title').value;
+            const area = document.getElementById('hazard-area').value;
+            const category = document.getElementById('hazard-category').value;
+            const severity = document.getElementById('hazard-severity').value;
+            const description = document.getElementById('hazard-description').value;
+
+            const randomNum = Math.floor(1000 + Math.random() * 9000);
+            const ticketId = `SFN-2026-${randomNum}`;
+
+            const newTicket = {
+                id: ticketId,
+                title,
+                area,
+                category,
+                severity,
+                description,
+                image: currentUploadedImage,
+                status: 'Abierto',
+                reportedBy: currentUser.name,
+                reportedDate: new Date().toISOString().replace('T', ' ').substring(0, 16),
+                hierarchyControl: '',
+                controlDetail: '',
+                closureNote: '',
+                closedDate: ''
+            };
+
+            tickets.unshift(newTicket);
+            updateUI();
+            showToast(`¡Ticket ${ticketId} generado y enviado al área responsable con éxito!`);
+            document.getElementById('report-form').reset();
+            removeImage();
+            switchTab('tickets');
+        }
+
+        // Open Ticket Detail Modal for Management (Steps 5, 6, 7 & 8)
+        let activeModalTicketId = null;
+
+        function openTicketModalDetail(ticketId) {
+            activeModalTicketId = ticketId;
+            const t = tickets.find(x => x.id === ticketId);
+            if (!t) return;
+
+            const modalContainer = document.getElementById('modal-content-container');
+            modalContainer.innerHTML = `
+                <div class="flex items-center justify-between mb-4 pb-4 border-b border-slate-800">
+                    <div>
+                        <span class="text-xs font-mono font-bold text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-lg border border-amber-500/20">${t.id}</span>
+                        <h3 class="text-xl font-bold text-white mt-2">${t.title}</h3>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-h-[70vh] overflow-y-auto pr-2">
+                    <div class="space-y-4">
+                        <div class="rounded-2xl overflow-hidden border border-slate-800 bg-slate-950">
+                            <img src="${t.image}" alt="Evidencia" class="w-full h-48 object-cover">
+                        </div>
+                        <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-2 text-xs">
+                            <p><strong class="text-slate-400">Área Responsable:</strong> <span class="text-slate-200">${t.area}</span></p>
+                            <p><strong class="text-slate-400">Categoría:</strong> <span class="text-slate-200">${t.category}</span></p>
+                            <p><strong class="text-slate-400">Severidad:</strong> <span class="${getSeverityClass(t.severity)} px-2 py-0.5 rounded-md font-bold">${t.severity}</span></p>
+                            <p><strong class="text-slate-400">Reportado por:</strong> <span class="text-slate-200">${t.reportedBy} (${t.reportedDate})</span></p>
+                            <p><strong class="text-slate-400">Estado Actual:</strong> <span class="${getStatusBadgeClass(t.status)} px-2 py-0.5 rounded-md font-bold">${t.status}</span></p>
+                        </div>
+                        <div>
+                            <p class="text-xs font-semibold text-slate-400 mb-1">Descripción del Hallazgo:</p>
+                            <p class="text-sm text-slate-300 bg-slate-950 p-3 rounded-xl border border-slate-800">${t.description}</p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4 bg-slate-950/60 p-5 rounded-2xl border border-slate-800 flex flex-col justify-between">
+                        <div class="space-y-4">
+                            <h4 class="text-sm font-bold text-amber-400 flex items-center gap-2">
+                                <i class="fa-solid fa-gears"></i> Gestión & Jerarquía de Control
+                            </h4>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-300 mb-1.5">Aplicar Jerarquía de Control (Paso 6)</label>
+                                <select id="modal-hierarchy-select" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-100 focus:outline-none focus:border-amber-500">
+                                    <option value="">Seleccionar medida de control...</option>
+                                    <option value="Eliminación" ${t.hierarchyControl === 'Eliminación' ? 'selected' : ''}>1. Eliminación (Remover peligro)</option>
+                                    <option value="Sustitución" ${t.hierarchyControl === 'Sustitución' ? 'selected' : ''}>2. Sustitución (Reemplazar material/proceso)</option>
+                                    <option value="Controles de Ingeniería" ${t.hierarchyControl === 'Controles de Ingeniería' ? 'selected' : ''}>3. Controles de Ingeniería (Guardas / Sistemas)</option>
+                                    <option value="Controles Administrativos" ${t.hierarchyControl === 'Controles de Ingeniería' ? '' : t.hierarchyControl === 'Controles Administrativos' ? 'selected' : ''}>4. Controles Administrativos (Señalización / Capacitación)</option>
+                                    <option value="EPP / EEPP" ${t.hierarchyControl === 'EPP / EEPP' ? 'selected' : ''}>5. EPP / EEPP (Equipo de Protección Personal)</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-300 mb-1.5">Detalle del Plan de Acción / Mitigación</label>
+                                <textarea id="modal-control-detail" rows="3" placeholder="Explique la acción correctiva aplicada..." class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-amber-500 resize-none">${t.controlDetail || ''}</textarea>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-300 mb-1.5">Nota de Cierre / Evidencia de Resolución</label>
+                                <textarea id="modal-closure-note" rows="2" placeholder="Requerido para cerrar el ticket..." class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-amber-500 resize-none">${t.closureNote || ''}</textarea>
+                            </div>
+                        </div>
+
+                        <div class="pt-4 border-t border-slate-800 flex items-center justify-between gap-3">
+                            <button type="button" onclick="updateTicketStatus('En Mitigación')" class="flex-1 bg-sky-600/20 hover:bg-sky-600/30 text-sky-400 border border-sky-500/30 py-2.5 rounded-xl text-xs font-bold transition">
+                                <i class="fa-solid fa-spinner mr-1"></i> Marcar En Mitigación
+                            </button>
+                            <button type="button" onclick="updateTicketStatus('Cerrado')" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white py-2.5 rounded-xl text-xs font-bold transition shadow-lg shadow-emerald-600/20">
+                                <i class="fa-solid fa-circle-check mr-1"></i> Cerrar Ticket
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('ticket-modal').classList.remove('hidden');
+            document.getElementById('ticket-modal').classList.add('flex');
+        }
+
+        function closeTicketModal() {
+            document.getElementById('ticket-modal').classList.remove('flex');
+            document.getElementById('ticket-modal').classList.add('hidden');
+            renderTicketsTable();
+            renderDashboard();
+        }
+
+        function updateTicketStatus(newStatus) {
+            const t = tickets.find(x => x.id === activeModalTicketId);
+            if (!t) return;
+
+            const hierarchyVal = document.getElementById('modal-hierarchy-select').value;
+            const controlDetailVal = document.getElementById('modal-control-detail').value;
+            const closureNoteVal = document.getElementById('modal-closure-note').value;
+
+            if (newStatus === 'Cerrado' && !closureNoteVal.trim()) {
+                showToast('Debe ingresar una nota de cierre y evidencia para cerrar el ticket.', 'error');
+                return;
+            }
+
+            t.hierarchyControl = hierarchyVal;
+            t.controlDetail = controlDetailVal;
+            t.status = newStatus;
+            
+            if (newStatus === 'Cerrado') {
+                t.closureNote = closureNoteVal;
+                t.closedDate = new Date().toISOString().replace('T', ' ').substring(0, 16);
+                showToast(`Ticket ${t.id} cerrado con éxito y archivado con evidencia.`);
+            } else {
+                showToast(`Ticket ${t.id} actualizado a: ${newStatus}`);
+            }
+
+            closeTicketModal();
+        }
+
+        // Profile Update Handler
+        function handleProfileUpdate(e) {
+            e.preventDefault();
+            currentUser.name = document.getElementById('prof-name').value;
+            currentUser.email = document.getElementById('prof-email').value;
+            currentUser.role = document.getElementById('prof-role').value;
+            currentUser.area = document.getElementById('prof-area').value;
+            currentUser.initials = currentUser.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+
+            updateUI();
+            showToast('Perfil de usuario actualizado correctamente.');
+        }
+
+        // User Auth Switch Modal
+        function openAuthModal() {
+            document.getElementById('auth-modal').classList.remove('hidden');
+            document.getElementById('auth-modal').classList.add('flex');
+        }
+
+        function closeAuthModal() {
+            document.getElementById('auth-modal').classList.remove('flex');
+            document.getElementById('auth-modal').classList.add('hidden');
+        }
+
+        function selectPresetUser(name, role, initials) {
+            currentUser.name = name;
+            currentUser.role = role;
+            currentUser.initials = initials;
+            currentUser.email = name.toLowerCase().replace(/ /g, '.') + '@safenow.cl';
+            
+            document.getElementById('prof-name').value = currentUser.name;
+            document.getElementById('prof-email').value = currentUser.email;
+            document.getElementById('prof-role').value = currentUser.role;
+
+            updateUI();
+            closeAuthModal();
+            showToast(`Sesión cambiada a: ${name} (${role})`, 'info');
+        }
+
+        // Sidebar toggle for mobile
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('-translate-x-full');
+        }
+
+        function toggleNotifications() {
+            showToast('No hay notificaciones pendientes. Todos los riesgos están siendo gestionados.', 'info');
+        }
+    </script>
+</body>
+</html>
